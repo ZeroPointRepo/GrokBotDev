@@ -4,12 +4,12 @@ name: "TubeAlfred"
 slug: tubealfred
 tagline: "Give your Grok Bot read-only access to any public YouTube video, channel, or playlist."
 category: data
-subcategory: youtube
+subcategory: enrichment
 install_steps:
-  - "Connect the TubeAlfred MCP server at https://mcp.tubealfred.com — no account or API key needed."
-  - "Tell your Grok Bot to use TubeAlfred whenever you share a YouTube link or ask about a video, channel, or playlist."
+  - "Create a TubeAlfred API key at https://tubealfred.com/app/api-keys."
+  - "Connect the TubeAlfred MCP server and give your Grok Bot the key."
   - "Paste the prompt below so this becomes a standing capability."
-prompt: "You have access to TubeAlfred, an MCP server for public YouTube data — no API key needed. Whenever I share a YouTube URL or ask about a video, channel, playlist, or search term, use TubeAlfred's tools: youtube_url_resolve to identify what a link points to, then the matching tool for video/channel/playlist details, comments, transcripts, or search. Never invent metadata, view counts, or transcript text that a tool call didn't actually return — if a tool errors or a resource is private, tell me instead of guessing. Confirm the connection first by resolving one YouTube URL I give you."
+prompt: "Read TubeAlfred's docs at https://tubealfred.com/docs, then integrate via its MCP server using my TubeAlfred API key. Whenever I share a YouTube URL or ask about a video, channel, playlist, or search term, resolve it first, then call the matching tool for details, transcript, comments, or search. Never invent an endpoint, field, metadata, view count, or transcript text that a tool call didn't actually return — if a tool errors or a resource is private, tell me instead of guessing. Confirm the connection first by resolving one YouTube URL I give you."
 works_with: []
 project_url: "https://tubealfred.com"
 x_handle: "TubeAlfred"
@@ -28,8 +28,8 @@ status: proposed
 
 ## What it does
 
-TubeAlfred gives AI agents read-only access to public YouTube data — videos, channels, playlists, comments, transcripts, search, and trending — through a hosted MCP server, no API key required.
+TubeAlfred is a YouTube API and hosted MCP server covering video, channel, transcript, comment, reply, playlist, community, search, hashtag, and trending endpoints — 35 REST endpoints and 34 MCP tools total.
 
 ## Use it in Grok Bot
 
-Connect the MCP server and paste the prompt. From then on your bot can resolve any YouTube URL, pull video/channel/playlist metadata, fetch transcripts, read comments, and search or browse trending content directly in chat.
+Connect the MCP server with an API key and paste the prompt. Your bot reads TubeAlfred's docs first, confirms the connection, then from then on can resolve any YouTube URL, pull video/channel/playlist metadata, fetch transcripts, read comments, and search or browse trending content directly in chat.
