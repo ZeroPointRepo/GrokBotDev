@@ -13,6 +13,8 @@ schedule: adhoc
 autonomy: acts-with-approval
 difficulty: intermediate
 setup_minutes: 20
+integrations:
+  - DevTune
 author:
   handle: theplgeek
   url: https://x.com/theplgeek
