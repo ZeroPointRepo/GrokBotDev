@@ -8,16 +8,12 @@ sharer:
   handle: "dancingteeth"
   url: "https://x.com/dancingteeth"
   platform: "x"
-source:
-  url: "https://x.com/dancingteeth/status/2093854738836042147"
-  excerpt: "It starts the loop on your computer. Finally, you're not the verify step."
-  posted_at: "2026-08-30T00:14:06.000Z"
 share_url: "https://x.ai/bot/AETdGbRRNWfckrRGv22LD"
 tags: ["developer", "productivity", "automation", "engineering", "on-demand"]
 primary_category: "developer"
 includes: ["instructions", "memories", "skills"]
 added_at: "2026-08-30T00:20:00Z"
-updated_at: "2026-08-30T00:24:00Z"
+updated_at: "2026-08-30T00:57:00Z"
 status: "proposed"
 ---
 
