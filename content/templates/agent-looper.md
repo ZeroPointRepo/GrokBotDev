@@ -8,12 +8,16 @@ sharer:
   handle: "dancingteeth"
   url: "https://x.com/dancingteeth"
   platform: "x"
+source:
+  url: "https://x.com/dancingteeth/status/2093868415542845628"
+  excerpt: "This one can replace your dev bots. You say what to build and how you know it's done."
+  posted_at: "2026-08-30T01:08:27.000Z"
 share_url: "https://x.ai/bot/AETdGbRRNWfckrRGv22LD"
 tags: ["developer", "productivity", "automation", "engineering", "on-demand"]
 primary_category: "developer"
 includes: ["instructions", "memories", "skills"]
 added_at: "2026-08-30T00:20:00Z"
-updated_at: "2026-08-30T00:57:00Z"
+updated_at: "2026-08-30T01:09:00Z"
 status: "proposed"
 ---
 
