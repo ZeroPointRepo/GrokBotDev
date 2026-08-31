@@ -2,8 +2,8 @@
 type: template
 name: "Research Runner"
 slug: research-runner
-tagline: "A Bot that rents confidential GPU compute and proves what it ran"
-description: "Research Runner rents GPU compute from Prism Network, runs private prompts inside a hardware enclave nobody else can read, pays per call in USDG, and reports the answer, the onchain cost, and the attestation verdict. It inspects every job before running it and keeps spending capped."
+tagline: "Rents a GPU for the work Grok Bot's own computer can't run"
+description: "Rents NVIDIA GPUs on Prism Network for private analysis and CUDA jobs that cannot run on the shared Grok Bot computer. Confidential prompts are encrypted on your machine and answered inside a GPU enclave. It inspects every job before running it, and spend always waits on you."
 sharer:
   handle: "useprismnetwork"
   url: "https://x.com/useprismnetwork"
