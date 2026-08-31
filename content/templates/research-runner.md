@@ -8,6 +8,7 @@ sharer:
   handle: "useprismnetwork"
   url: "https://x.com/useprismnetwork"
   platform: "x"
+share_url: "https://x.ai/bot/P2qgQokuPHVJhrkmRDmLv"
 tags: ["research", "developer", "crypto", "automation"]
 primary_category: "research"
 includes: ["instructions"]
