@@ -8,13 +8,17 @@ sharer:
   handle: brstorrie
   url: https://x.com/brstorrie
   platform: x
+source:
+  url: https://x.com/brstorrie/status/2094654945488252959
+  excerpt: "The Accountant watches your Grok Bot fleet for runaway tokens: over-polling, retry loops, empty stubs."
+  posted_at: "2026-09-01T05:13:50Z"
 share_url: https://x.ai/bot/Y_R1Ya9SIzQZguGTV5NCX
 tags: [developer, ops, saving-money, monitoring, automation, meta-bot, scheduled]
 primary_category: ops
 includes: [instructions, memories, workflow, schedule, skills]
 includes_note: "Weekday 7:30 local spend audit. First-run kickoff is for accounts already burning usage."
 added_at: "2026-09-01T05:00:00Z"
-updated_at: "2026-09-01T05:00:00Z"
+updated_at: "2026-09-01T05:13:50Z"
 status: proposed
 ---
 
