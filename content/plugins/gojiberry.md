@@ -2,16 +2,18 @@
 type: plugin
 name: "Gojiberry AI"
 slug: gojiberry
-tagline: "Surface warm B2B leads from buying signals and draft the outreach."
+tagline: "Find warm B2B leads, manage outreach campaigns, and work your inbox from the agent"
 category: sales
 subcategory: prospecting
 install_steps:
-  - "Create a Gojiberry account at gojiberry.ai, set your ICP, and connect your stack (Slack, HubSpot or Pipedrive)."
-  - "Get your account/API access from the Gojiberry dashboard (see the linked docs for the exact place)."
-  - "Paste the prompt below into your Grok Bot and connect it to Gojiberry so warm-lead review becomes a daily habit."
-prompt: "You are setting up a Gojiberry AI integration for me inside Grok Bot. First read Gojiberry's documentation at https://gojiberry.ai so you understand what it does: it detects warm B2B leads from 15+ buying and social signals (LinkedIn likes and comments, job changes, funding rounds, and more), filters them against my ICP, and runs personalized outreach to book demos. Connect to my Gojiberry account and its integrations (Slack, HubSpot, Pipedrive) as the docs describe. Then, on a cadence, pull the fresh warm leads that match my ICP, summarize why each is showing intent, and draft the outreach. Rules: follow the docs exactly and NEVER invent a lead, a signal, or a field Gojiberry doesn't return, and never claim an API capability the docs don't describe. Sending outreach or writing to my CRM is an irreversible action — always show me the leads and the exact messages and get my explicit approval before anything is sent or synced. Confirm the connection by showing today's warm leads."
+  - "Create a Gojiberry account at https://app.gojiberry.ai (7-day free trial)."
+  - "In the app, go to Settings → API → \"Create API Key\" and copy the key — it is shown only once."
+  - "Add an MCP server to your bot: URL https://mcp.gojiberry.ai/mcp (Streamable HTTP) with header Authorization: Bearer YOUR_API_KEY."
+  - "Reload your client. The gojiberry tools appear; read-only tools carry MCP annotations so clients can auto-approve them and always prompt on writes."
+prompt: "Connect to the Gojiberry MCP server at https://mcp.gojiberry.ai/mcp, authenticating with the Authorization: Bearer header and my Gojiberry API key. Before using any tool, read the integration guide at https://github.com/DydjyZ/Gojiberry-mcp/blob/main/docs/user-guide.md and only call tools the server actually exposes — never invent an endpoint, field, or filter. Use the read-only tools (list_contacts, get_contact, list_campaigns, get_campaign, list_lists, get_intent_type_counts, list_unibox_threads, get_unibox_thread_messages, list_agents, get_agent_logs) freely to answer my questions about contacts, campaigns, lists, lead-finding agents, and my inbox. For anything that writes, spends, or sends — create_contact, update_contact, update_campaign, create_list, add_contacts_to_list, remove_contacts_from_list, enrich_contact_email (consumes 1 credit on success), and especially send_unibox_linkedin_message — show me exactly what you are about to do and wait for my explicit confirmation first."
 works_with: []
 project_url: "https://gojiberry.ai"
+repo_url: "https://github.com/DydjyZ/Gojiberry-mcp"
 x_handle: "gojiberryai"
 founder:
   name: "Romàn Czerny"
@@ -20,20 +22,20 @@ author:
   handle: "gojiberry"
   url: "https://gojiberry.ai"
   platform: web
-pricing_note: "Paid plans; see gojiberry.ai."
-setup_minutes: 10
+pricing_note: "7-day free trial, then from $99/mo. Email enrichment consumes credits."
+setup_minutes: 5
+added_at: "2026-08-22T00:00:00Z"
+updated_at: "2026-09-02T18:00:00Z"
 featured: true
 sponsor: false
-added_at: "2026-08-22T00:00:00Z"
-updated_at: "2026-08-22T13:00:00Z"
-verified_at: "2026-08-22T13:00:00Z"
+verified_at: "2026-09-02T18:00:00Z"
 status: live
 ---
 
 ## What it does
 
-Gojiberry AI is a GTM brain for B2B teams: it watches 15+ buying and social signals — LinkedIn engagement, job changes, funding rounds — filters the matches against your ICP, and runs personalized outreach to book qualified demos. It plugs into Slack, HubSpot and Pipedrive, so a Grok Bot can surface who's in buying mode and tee up the follow-up.
+Gojiberry AI is a signal-based B2B prospecting platform: it watches LinkedIn for buying signals (funding rounds, job changes, competitor engagement), scores prospects against your ideal customer profile, and runs personalized multichannel outreach. This plugin connects your bot to your Gojiberry account over MCP (Streamable HTTP, open-source server under MIT) and exposes ~25 tools: search and filter contacts with pagination, create and update them, browse campaigns and their steps, manage lists (adding contacts to a list enrolls them in the linked campaign), inspect lead-finding Agents and their run logs, pull contact counts by intent type, read your unified inbox, and — always behind an explicit prompt — send a LinkedIn reply in an existing thread. Every tool carries a title plus explicit `readOnlyHint`/`destructiveHint` MCP annotations, so clients can auto-approve reads and must confirm writes.
 
 ## Use it in Grok Bot
 
-Paste the prompt on this page into a Grok Bot and connect it to your Gojiberry account. The bot reads Gojiberry's docs first, then each day it pulls the warm leads matching your ICP, explains the intent signal behind each one, and drafts the outreach — never sending a message or writing to your CRM without your explicit go-ahead.
+Ask in plain language: "show me contacts created this week with a score above 2", "how many contacts do I have per intent type?", "get campaign #5 and its steps", "add these ten contacts to my SaaS-founders list", or "summarize my unread inbox threads and draft replies". The bot reads live data from your account and only mutates anything after showing you the exact change it intends to make. Auth is a single API key from app.gojiberry.ai → Settings → API passed as a Bearer header; each conversation gets an isolated session and the server stores no data. Setup is the four steps above — about five minutes.
