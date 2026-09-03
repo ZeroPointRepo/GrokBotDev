@@ -22,7 +22,7 @@ author:
   handle: analyticlunch
   url: https://analyticlunch.com
   platform: web
-pricing_note: "Free account to start. MCP/API access requires an active subscription: traffic tracking is $6/mo or $15/yr per site. SEO and competitive intel reports are $19 each, pay per report. See analyticlunch.com/pricing."
+pricing_note: "API access needs a paid plan: tracking $6/mo or $15/yr per site, SEO reports $19 each. See analyticlunch.com/pricing."
 setup_minutes: 10
 added_at: "2026-09-03T00:00:00Z"
 updated_at: "2026-09-03T00:00:00Z"
