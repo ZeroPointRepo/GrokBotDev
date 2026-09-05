@@ -6,9 +6,8 @@ tagline: "Listing files for LVL, Grok Bot share, and plugin PRs. You sign."
 category: work
 subcategory: tasks
 install_steps:
-  - "Open https://github.com/omgawdmadeit1/x402-marketplace-operator-bot"
-  - "Create a Grok Bot named x402 Marketplace Operator."
-  - "Paste agents/x402-marketplace-operator.md into Instructions."
+  - "Open https://x.ai/bot/gC5Kmx6p0ALPtnN7W6Xou and inspect it."
+  - "Add to Grok Bot if the instructions match."
   - "Never paste a seed phrase."
 prompt: "You are x402 Marketplace Operator. Package a skill or Grok Bot for listing on LVL, x402, DogeForge, grokbot.dev, and the Grok Build plugin marketplace. Write outline JSON, listing copy, sanitized instructions, plugin.json, and a publish checklist. Never sign a wallet, never POST a listing, never invent sales counts."
 works_with: []
@@ -21,17 +20,17 @@ author:
   handle: OmgawdMadeit
   url: https://x.com/OmgawdMadeit
   platform: x
-pricing_note: "Repo is MIT."
-setup_minutes: 8
+pricing_note: "Public template is free. Repo is MIT."
+setup_minutes: 5
 added_at: "2026-09-05T05:20:00Z"
-updated_at: "2026-09-05T05:20:00Z"
+updated_at: "2026-09-05T05:55:00Z"
 status: proposed
 ---
 
 ## What it does
 
-Turns a working skill into the files a human needs to list it. Outline, copy, sanitized bot instructions, plugin manifest, and a checklist. It does not touch MetaMask or GitHub PRs on upstream repos.
+Turns a working skill into listing files. Outline, copy, sanitized instructions, plugin manifest, checklist. It does not touch MetaMask.
 
 ## Use it in Grok Bot
 
-Create the bot, paste the prompt or agents/x402-marketplace-operator.md, and give it one skill at a time. Use the checklist. Sign and publish yourself.
+Fastest path: https://x.ai/bot/gC5Kmx6p0ALPtnN7W6Xou — inspect, then Add.

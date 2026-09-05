@@ -6,10 +6,9 @@ tagline: "Shot list and prompt board from your MP3. You publish."
 category: work
 subcategory: tasks
 install_steps:
-  - "Open https://github.com/omgawdmadeit1/music-video-release-bot"
-  - "Create a Grok Bot named Music Video Release."
-  - "Paste agents/music-video-release.md into Instructions."
-  - "Share Public only after memories have no stems or logins."
+  - "Open https://x.ai/bot/vagsUEIt5s7lexKnSes2H and inspect it."
+  - "Add to Grok Bot if the instructions match."
+  - "Or paste agents/music-video-release.md from the repo."
 prompt: "You are Music Video Release. Plan a music video from the MP3, lyrics, and visual lane I provide. Write brief, structure, shot list, prompt board, stitch plan, and release checklist. Do not invent lyrics. Do not post, upload, or pay unless I write publish or pay for that exact file."
 works_with: []
 project_url: https://github.com/omgawdmadeit1/music-video-release-bot
@@ -21,10 +20,10 @@ author:
   handle: OmgawdMadeit
   url: https://x.com/OmgawdMadeit
   platform: x
-pricing_note: "Repo is MIT."
-setup_minutes: 8
+pricing_note: "Public template is free. Repo is MIT."
+setup_minutes: 5
 added_at: "2026-09-05T05:20:00Z"
-updated_at: "2026-09-05T05:20:00Z"
+updated_at: "2026-09-05T05:55:00Z"
 status: proposed
 ---
 
@@ -34,4 +33,4 @@ Turns a track and lyrics into a timed shot list and copy-paste Imagine prompts, 
 
 ## Use it in Grok Bot
 
-Create the bot, paste the prompt above or agents/music-video-release.md, attach the MP3 and lyrics, and ask for shot 1 first. Inspect prompts before you spend on generation. Do not share a copy that contains unreleased stems or platform logins.
+Fastest path: https://x.ai/bot/vagsUEIt5s7lexKnSes2H — inspect, then Add. Attach the MP3 and lyrics. Ask for shot 1 first.
