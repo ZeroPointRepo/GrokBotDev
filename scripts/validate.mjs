@@ -581,10 +581,20 @@ for (const entry of entries) {
       );
     }
 
-    // TPL-6 — a live template must name the post it was shared in.
+    // TPL-6 — the source post, when there is one, and the reachability floor.
+    //
+    // RELAXED 2026-09-05 alongside src/content.config.ts (read the long note on `source` there):
+    // a live template no longer HAS to carry `source`. A bot submitted at /submit/ may never
+    // have been posted about, and §10.1's traceable sharer is `sharer`, which is still required.
+    // What did NOT relax: a live entry must still give the reader somewhere to go, so `source`
+    // and `share_url` may not BOTH be missing. The shape rules below are untouched.
     const src = d.source;
-    if ((status === 'live' || status === 'needs-update') && !src) {
-      fail(file, 'TPL-6', 'a live template must carry `source` — the X post it was shared in (§10.1)');
+    if ((status === 'live' || status === 'needs-update') && !src && d.share_url === undefined) {
+      fail(
+        file,
+        'TPL-6',
+        'a live template needs `share_url`, `source`, or both — the install link or the post it was shared in (§10.1)'
+      );
     }
     if (src) {
       if (!TWEET_RE.test(src.url ?? '')) {

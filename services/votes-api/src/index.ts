@@ -5,6 +5,8 @@ import { connect } from './db/client.js';
 import { createLogger } from './logger.js';
 import { SlugRegistry } from './slug/registry.js';
 import { createTurnstileVerifier } from './turnstile.js';
+import { LiveTemplateManifest } from './submissions/live-manifest.js';
+import { createShareLinkVerifier } from './submissions/share-link.js';
 
 const cfg = loadConfig();
 const logger = createLogger(cfg.logLevel);
@@ -21,6 +23,12 @@ const app = createApp({
   db,
   slugRegistry,
   turnstileVerifier: createTurnstileVerifier(cfg.turnstileSecret),
+  shareLinkVerifier: createShareLinkVerifier(cfg.shareLinkTimeoutMs),
+  liveManifest: new LiveTemplateManifest({
+    file: cfg.submissionsManifestFile,
+    url: cfg.submissionsManifestUrl,
+    ttlMs: cfg.submissionsManifestTtlMs,
+  }),
   pepper: cfg.pepper,
   logger,
 });

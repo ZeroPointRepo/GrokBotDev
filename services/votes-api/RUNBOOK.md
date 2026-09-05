@@ -1,6 +1,6 @@
 # grokbot votes API runbook
 
-P1 local-only service for anonymous use-case upvotes. The API binds `127.0.0.1:4391`; nginx exposes only `/api/v1/*` on the review vhost. Port `4390` remains reserved for the existing `grokbot-services` waitlist/MCP service.
+P1 local-only service for anonymous use-case upvotes **and the public /submit/ bot form**. The API binds `127.0.0.1:4391`; nginx exposes only `/api/v1/*` on the review vhost. Port `4390` remains reserved for the existing `grokbot-services` waitlist/MCP service.
 
 ## Local start / stop
 
@@ -27,8 +27,8 @@ docker stop grokbot-votes-pg
 - Container: `grokbot-votes-pg` (Postgres 16)
 - Host port: `127.0.0.1:54390`
 - Data volume: `/opt/projects/grokbot-votes-data`
-- App role: `votes_app` (no `UPDATE`/`DELETE` on `vote_events`)
-- Admin role: `votes_admin` (CLI maintenance)
+- App role: `votes_app` (no `UPDATE`/`DELETE` on `vote_events`; **INSERT + SELECT only** on `submissions`)
+- Admin role: `votes_admin` (CLI maintenance — the only role that can move a submission's `status`)
 
 Apply migrations:
 
@@ -136,3 +136,53 @@ The `VOTES_HMAC_PEPPER` signs voter cookies and HMACs IP/UA signals. Rotation in
 3. Run `npm run digest` and `npm run review-flags -- list`.
 4. If abuse is clear, tighten nginx `limit_req` temporarily and/or stop `grokbot-votes-api`.
 5. Do not mutate `vote_events`. Use `review-flags` + `recount` after operator review.
+
+## Bot submissions (`/submit/`)
+
+`POST /api/v1/submissions` is the public form's endpoint. One required field: the
+`https://x.ai/bot/<21 chars>` share link. Everything else is optional attribution.
+
+### Layers between a POST and a row
+
+1. strict field allowlist + length caps + the exact share-link grammar
+2. honeypot field (`website`) and a minimum 2s time-on-form
+3. per-IP rate limit — nginx `limit_req zone=grokbot_submissions` (5r/m) and the service's own
+   `submissionIp` window (5/hour), keyed on the peppered hash
+4. Cloudflare Turnstile (the same verifier `/api/v1/identity` uses)
+5. dedupe against the queue (`share_url` is UNIQUE) and against the live site
+   (`SUBMISSIONS_MANIFEST_FILE`, else `SUBMISSIONS_MANIFEST_URL`, cached 5 min, degrades open)
+6. **server-side link verification** — the share page must answer `200`; its `og:title`
+   ("<Bot> by <Author>") is where `bot_name` / `bot_author` come from
+7. nothing publishes: the row lands `pending`
+
+Responses: `200 accepted` (echoes the resolved bot name), `409 duplicate` (+ `live_url` when we
+know it), `400 invalid_link` (`detail: shape | unreachable | http_<code>`), `400 bad_field`,
+`403 turnstile_failed`, `429 rate_limited`.
+
+There is deliberately **no public endpoint that lists submissions**.
+
+### Reviewing
+
+```bash
+npm run review-submissions -- list                      # pending queue, oldest first
+npm run review-submissions -- list --status all
+npm run review-submissions -- show     --id <uuid>
+npm run review-submissions -- approve  --id <uuid> --tags personal,productivity [--sharer-handle h] [--note "why"]
+npm run review-submissions -- reject   --id <uuid> --note "why"
+npm run review-submissions -- published --id <uuid>
+```
+
+`approve` validates the tags against `src/data/template-tags.json`, records the decision in
+`audit_log`, and prints a ready-to-use `templates.jsonl` record — the entry point of the existing
+authoring → `generator.py` → build gate → `promote.sh` pipeline. Set `TEMPLATES_JSONL` (or pass
+`--jsonl`) to append it to the marketplace corpus directly; the append is skipped if that
+`share_url` is already in the file, so re-running is safe.
+
+It REFUSES to approve a submission with no X handle: the site schema requires `sharer`, and a
+bot author's display name is not a handle. Find who to credit and pass `--sharer-handle`.
+
+### Privacy
+
+`submissions` never stores a raw IP. `ip_hash` is the same peppered HMAC the vote ledger uses, and
+`user_agent` is truncated to 300 characters. Rotating `VOTES_HMAC_PEPPER` (above) makes old
+submission hashes uncorrelatable with new ones, exactly as it does for votes.

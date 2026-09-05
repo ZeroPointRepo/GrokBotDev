@@ -383,6 +383,62 @@ export const CP_182_LATEST_REGION_ARIA = 'latest shareable bots';
 export const CP_183_LATEST_PREV = 'show newer bots';
 export const CP_184_LATEST_NEXT = 'show older bots';
 
+/**
+ * CP-186 ... CP-206 — the /submit/ BOT FORM (2026-09-05).
+ *
+ * The point of this block, and the only thing to protect if it is ever reworded: the form asks
+ * for ONE thing. A submitter can paste a share link and be done. Every other field exists so we
+ * can credit them, and the copy has to keep saying so out loud - the moment it reads like a
+ * form with five fields, the feature is gone even though the code still works.
+ *
+ * House rules as CP-146+: no em dashes (spaced hyphens only), chrome is lowercase mono, the
+ * product noun is "Grok Bot". Error strings name what went wrong and what to do next; none of
+ * them blames the submitter for a link that x.ai simply did not serve.
+ */
+export const CP_186_SUBMIT_FORM_HEADING = 'submit a bot';
+export const CP_187_SUBMIT_FORM_LEAD =
+  'one link is genuinely all we need. paste the share link for your Grok Bot - we open it ourselves, read its name off the page, and put it in the review queue.';
+export const CP_188_SUBMIT_LINK_LABEL = 'bot share link';
+export const CP_189_SUBMIT_LINK_HINT =
+  'the "Add to Grok Bot" link. it looks like https://x.ai/bot/ followed by 21 characters.';
+export const CP_190_SUBMIT_OPTIONAL_HEADING = 'so we can credit you (all optional)';
+export const CP_191_SUBMIT_OPTIONAL_LEAD =
+  'these are only ever used to credit you on the page. leave every one of them blank and we will still take the bot.';
+export const CP_192_SUBMIT_HANDLE_LABEL = 'your x handle';
+export const CP_193_SUBMIT_WEBSITE_LABEL = 'your website';
+export const CP_194_SUBMIT_POST_LABEL = 'the post you shared it in';
+export const CP_195_SUBMIT_NOTE_LABEL = 'anything we should know';
+export const CP_196_SUBMIT_NOTE_HINT = 'what it does, who it is for, anything a reviewer should read first.';
+export const CP_197_SUBMIT_BUTTON = 'submit the bot';
+export const CP_198_SUBMIT_BUTTON_BUSY = 'checking the link…';
+export const CP_199_SUBMIT_SUCCESS_HEADING = 'got it - {bot} is in the queue';
+export const CP_200_SUBMIT_SUCCESS_BODY =
+  'a human reads every submission, usually within a day. nothing goes live until one of us has.';
+export const CP_201_SUBMIT_SUCCESS_CREDITED = 'when it does, you are credited as @{handle}.';
+export const CP_202_SUBMIT_SUCCESS_ANONYMOUS =
+  'you did not leave a handle, so we will credit whoever we can trace it to.';
+export const CP_203_SUBMIT_ERR_LINK =
+  'that is not a Grok Bot share link. open your bot, tap share, and copy the whole https://x.ai/bot/… link.';
+export const CP_204_SUBMIT_ERR_DEAD =
+  'we opened that link and x.ai did not give us a bot. check you copied all of it, and that the bot is still shared.';
+export const CP_205_SUBMIT_ERR_PENDING = 'someone got there first - that one is already in the queue.';
+export const CP_206_SUBMIT_ERR_LIVE = 'that one is already on the site.';
+export const CP_206_SUBMIT_ERR_LIVE_LINK = 'see it →';
+export const CP_207_SUBMIT_ERR_RATE = 'that is a lot of bots at once. give it an hour and send the rest.';
+export const CP_208_SUBMIT_ERR_HUMAN = 'we could not confirm you are a person. reload the page and try once more.';
+export const CP_209_SUBMIT_ERR_FIELD_HANDLE = 'that x handle does not look right - letters, numbers and underscores, up to 15.';
+export const CP_210_SUBMIT_ERR_FIELD_WEBSITE = 'that website does not look right - it needs a real domain.';
+export const CP_211_SUBMIT_ERR_FIELD_POST = 'that post link does not look right - it should be an x.com/…/status/… url.';
+export const CP_212_SUBMIT_ERR_DOWN =
+  'submitting is down for a moment. try again shortly, or use the pull request route below - it goes to the same place.';
+export const CP_213_SUBMIT_NOJS =
+  'this form needs JavaScript. with it off, use the pull request route below - it lands in the same review queue.';
+export const CP_214_SUBMIT_PRIVACY =
+  'no account, no email, no login. we keep the link, whatever you chose to tell us, and a one-way hash of your network address so we can stop abuse.';
+export const CP_215_SUBMIT_PR_HEADING = 'or send a pull request';
+export const CP_216_SUBMIT_PR_LEAD =
+  'the long way round, and still the right one for a plugin or a written-up use case. it is the same review queue at the end of it.';
+
 /** Interpolate `{token}` placeholders in a pack string without editorialising it. */
 export function fillCopy(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) =>

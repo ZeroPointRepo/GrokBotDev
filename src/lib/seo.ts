@@ -68,7 +68,7 @@ export const META = {
   submit: {
     title: 'Submit | grokbot.dev',
     description:
-      'Share a plugin, a use case, or something great you found on X. No account needed to get started.',
+      'Share your Grok Bot in one step: paste the share link. No account, no login — a human reviews every submission.',
   },
   search: {
     title: 'Search | grokbot.dev',

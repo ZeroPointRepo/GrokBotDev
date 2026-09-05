@@ -1,6 +1,21 @@
 ---
-// §4.3.10 — the submit chooser. Three tiles (§8.3 GitHub prefill CTAs) + the no-account
-// anchor sections. Copy: CP-057 (KEEP both) · CP-058 · CP-059 · CP-060 · CP-061 (KEEP).
+// §4.3.10 — /submit/. REWORKED 2026-09-05: the page now LEADS WITH A FORM.
+//
+// It used to be a chooser: three GitHub prefill tiles and some instructions. That is a fine
+// route for a plugin or a written-up use case, and it is still here - but it asked a person who
+// just wants to share their bot to open a pull request, which is why almost nobody did. The
+// form above it asks for ONE field, the share link, and does the rest server-side: it fetches
+// the link, reads the bot's name off it, dedupes against the queue and the live site, and files
+// it for review. Everything else on the form is optional and exists only to credit the sender.
+//
+// Nothing here publishes. POST /api/v1/submissions writes a `pending` row and a human moves it
+// (services/votes-api - bin/review-submissions.ts).
+//
+// ONE ACCENT PER VIEWPORT (A1): the form's submit button is the amber, so the three tiles below
+// are all `outline`. The first tile used to be `solid`; if the form ever leaves this page, that
+// tile takes the accent back.
+//
+// Copy: CP-186 … CP-216 (form + PR section) · CP-057 (KEEP both) · CP-058 · CP-059 · CP-060 · CP-061 (KEEP).
 //
 // F17 NOTE — this page has no <form>: submission is a pull request, and the CTAs are GitHub
 // prefill links. So the directive's "optional youtube_url field, validated against the three
@@ -16,6 +31,8 @@ import MarkGlyph from '../../components/MarkGlyph.astro';
 import Button from '../../components/Button.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import ContributeSteps from '../../components/ContributeSteps.astro';
+import SubmitBotForm from '../../components/SubmitBotForm.astro';
+import { CP_215_SUBMIT_PR_HEADING, CP_216_SUBMIT_PR_LEAD } from '../../lib/copy';
 import { META, breadcrumbList, webPage } from '../../lib/seo';
 
 const REPO = 'https://github.com/ZeroPointRepo/GrokBotDev';
@@ -109,7 +126,7 @@ const tiles = [
     body: 'you built something Grok Bots can use. you get your own page and a dofollow link.',
     cta: 'submit a plugin',
     href: prefill('plugins', 'my-plugin.md', PLUGIN_TEMPLATE),
-    variant: 'solid' as const,
+    variant: 'outline' as const,
   },
   {
     title: 'a use case',
@@ -136,7 +153,16 @@ const graph = [webPage('/submit/', META.submit.title, META.submit.description), 
     <header class="flex flex-col gap-4">
       <Breadcrumbs items={crumbs} />
       <h1 class="display-track font-display text-3xl text-text md:text-4xl">submit</h1>
-      <p class="max-w-prose text-base text-text-muted">what are you sharing?</p>
+      <p class="max-w-prose text-base text-text-muted">
+        built a Grok Bot worth sharing? send us the link and we do the rest.
+      </p>
+    </header>
+
+    <SubmitBotForm />
+
+    <section class="flex flex-col gap-4">
+      <SectionHeading title={CP_215_SUBMIT_PR_HEADING} variant="sub" level={2} />
+      <p class="max-w-prose text-base text-text-muted">{CP_216_SUBMIT_PR_LEAD}</p>
       {/* The rulebook — the same file submitters and our reviewing agents read. */}
       <a
         href={`${REPO}/blob/main/CONTRIBUTING.md`}
@@ -151,7 +177,7 @@ const graph = [webPage('/submit/', META.submit.title, META.submit.description), 
         </span>
         <span class="ml-auto font-mono text-accent-text">→</span>
       </a>
-    </header>
+    </section>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
       {

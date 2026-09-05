@@ -1,0 +1,257 @@
+---
+// The /submit/ bot form — SANCTIONED ISLAND. One required field, everything else attribution.
+//
+// SHIPS `hidden`. The form cannot work without JS (it needs Turnstile and a fetch), and a dead
+// control is worse than no control (§4.2 / CLAUDE.md), so the markup arrives hidden and
+// `scripts/submit-form.ts` un-hides it. With JS off the visible thing is CP-213's honest note
+// pointing at the pull-request route directly below, which needs no JS at all.
+//
+// NO INLINE JS. The behaviour is a bundled module under src/scripts/, exactly like the upvote
+// island; audit-scripts.mjs fails the build if that ever regresses. Turnstile is already an
+// allowed origin in §10.7 (infra/security-headers.conf) because the upvote island uses it.
+//
+// Copy: CP-186 … CP-214. Never inline a string here - reword in src/lib/copy.ts.
+import Button from './Button.astro';
+import MarkGlyph from './MarkGlyph.astro';
+import {
+  CP_186_SUBMIT_FORM_HEADING,
+  CP_187_SUBMIT_FORM_LEAD,
+  CP_188_SUBMIT_LINK_LABEL,
+  CP_189_SUBMIT_LINK_HINT,
+  CP_190_SUBMIT_OPTIONAL_HEADING,
+  CP_191_SUBMIT_OPTIONAL_LEAD,
+  CP_192_SUBMIT_HANDLE_LABEL,
+  CP_193_SUBMIT_WEBSITE_LABEL,
+  CP_194_SUBMIT_POST_LABEL,
+  CP_195_SUBMIT_NOTE_LABEL,
+  CP_196_SUBMIT_NOTE_HINT,
+  CP_197_SUBMIT_BUTTON,
+  CP_213_SUBMIT_NOJS,
+  CP_214_SUBMIT_PRIVACY,
+} from '../lib/copy';
+
+// The same public sitekey the upvote island uses. Public by design; the secret is server-side.
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITEKEY ?? '1x00000000000000000000AA';
+---
+
+{/* No-JS state. Visible by default, hidden by the island the moment it boots. */}
+<p
+  class="submitBot__nojs max-w-prose rounded-sm border border-border bg-surface px-4 py-3 text-sm text-text-muted"
+  data-submit-nojs
+>
+  {CP_213_SUBMIT_NOJS}
+</p>
+
+<section class="submitBot" data-submit-root data-sitekey={sitekey} hidden>
+  <div class="submitBot__panel flex flex-col gap-6 rounded-sm border border-border bg-surface p-5 md:p-6">
+    <header class="flex flex-col gap-2">
+      <h2 class="flex items-center gap-2 font-display text-2xl text-text display-track">
+        <MarkGlyph size={12} class="text-accent shrink-0" />
+        {CP_186_SUBMIT_FORM_HEADING}
+      </h2>
+      <p class="max-w-prose text-base text-text-muted">{CP_187_SUBMIT_FORM_LEAD}</p>
+    </header>
+
+    <form class="flex flex-col gap-6" data-submit-form novalidate>
+      <div class="flex flex-col gap-2">
+        <label class="font-mono text-sm lowercase text-text" for="submit-share-url">
+          {CP_188_SUBMIT_LINK_LABEL}
+          <span class="text-accent-text" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="submit-share-url"
+          name="share_url"
+          type="url"
+          required
+          inputmode="url"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          placeholder="https://x.ai/bot/…"
+          aria-describedby="submit-share-url-hint"
+          class="submitBot__input"
+          data-submit-link
+        />
+        <p id="submit-share-url-hint" class="font-mono text-xs text-text-muted">{CP_189_SUBMIT_LINK_HINT}</p>
+      </div>
+
+      <fieldset class="submitBot__fieldset flex flex-col gap-4">
+        <legend class="font-mono text-sm lowercase text-text">{CP_190_SUBMIT_OPTIONAL_HEADING}</legend>
+        <p class="mt-1 max-w-prose text-sm text-text-muted">{CP_191_SUBMIT_OPTIONAL_LEAD}</p>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="flex flex-col gap-2">
+            <label class="font-mono text-sm lowercase text-text" for="submit-handle">{CP_192_SUBMIT_HANDLE_LABEL}</label>
+            <input
+              id="submit-handle"
+              name="submitter_x_handle"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="@yourhandle"
+              class="submitBot__input"
+              data-submit-handle
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="font-mono text-sm lowercase text-text" for="submit-website">{CP_193_SUBMIT_WEBSITE_LABEL}</label>
+            <input
+              id="submit-website"
+              name="submitter_website"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="yoursite.com"
+              class="submitBot__input"
+              data-submit-website
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-mono text-sm lowercase text-text" for="submit-post">{CP_194_SUBMIT_POST_LABEL}</label>
+          <input
+            id="submit-post"
+            name="source_post_url"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="https://x.com/you/status/…"
+            class="submitBot__input"
+            data-submit-post
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-mono text-sm lowercase text-text" for="submit-note">{CP_195_SUBMIT_NOTE_LABEL}</label>
+          <textarea
+            id="submit-note"
+            name="submitter_note"
+            rows="3"
+            maxlength="500"
+            aria-describedby="submit-note-hint"
+            class="submitBot__input submitBot__textarea"
+            data-submit-note></textarea>
+          <p id="submit-note-hint" class="font-mono text-xs text-text-muted">{CP_196_SUBMIT_NOTE_HINT}</p>
+        </div>
+      </fieldset>
+
+      {/* Honeypot. Never shown, never focusable, never announced (same shape as NewsletterRow). */}
+      <div class="submitBot__trap" aria-hidden="true">
+        <label for="submit-website-url">website</label>
+        <input id="submit-website-url" type="text" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <Button
+            variant="solid"
+            type="submit"
+            label={CP_197_SUBMIT_BUTTON}
+            attrs={{ 'data-submit-button': 'true' }}
+          />
+          <p class="font-mono text-xs text-text-muted" aria-live="polite" data-submit-live></p>
+        </div>
+        <p class="submitBot__error hidden max-w-prose font-mono text-xs" data-submit-error></p>
+        <p class="max-w-prose font-mono text-xs text-text-muted">{CP_214_SUBMIT_PRIVACY}</p>
+      </div>
+
+      <span class="submitBot__turnstile" data-submit-turnstile aria-hidden="true"></span>
+    </form>
+
+    {/* Success replaces the form in place, so the confirmation is where the eye already is. */}
+    <div class="hidden flex-col gap-2" data-submit-success tabindex="-1">
+      <p class="font-display text-xl text-text display-track" data-submit-success-heading></p>
+      <p class="max-w-prose text-base text-text-muted" data-submit-success-body></p>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initSubmitForm } from '../scripts/submit-form';
+  initSubmitForm();
+</script>
+
+<style>
+  .submitBot[hidden],
+  .submitBot__nojs[hidden] {
+    display: none;
+  }
+
+  .submitBot__input {
+    inline-size: 100%;
+    min-block-size: 44px;
+    border: var(--border-width) solid var(--color-border-interactive);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: 0.625rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    transition: border-color 150ms ease;
+  }
+
+  .submitBot__input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .submitBot__input:hover {
+    border-color: var(--color-text);
+  }
+
+  .submitBot__textarea {
+    min-block-size: 88px;
+    resize: vertical;
+  }
+
+  .submitBot__input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .submitBot__error {
+    color: var(--color-danger);
+  }
+
+  .submitBot__fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-inline-size: 0; /* fieldsets refuse to shrink otherwise, and the grid overflows on mobile */
+  }
+
+  .submitBot__fieldset legend {
+    display: block;
+    padding: 0;
+  }
+
+  /* Off-screen rather than display:none — a bot that skips hidden inputs still fills this one. */
+  .submitBot__trap {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .submitBot__turnstile {
+    position: fixed;
+    inset-inline-start: -9999px;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .submitBot__input {
+      transition: none;
+    }
+  }
+</style>

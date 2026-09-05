@@ -57,6 +57,12 @@ export interface VotesConfig {
   slugsUrl?: string;
   slugRefreshMs: number;
   logLevel: string;
+  /** Live-template manifest used to dedupe a submission against what is already published. */
+  submissionsManifestFile?: string;
+  submissionsManifestUrl?: string;
+  submissionsManifestTtlMs: number;
+  /** Budget for the server-side share-link fetch that verifies a submission. */
+  shareLinkTimeoutMs: number;
 }
 
 export function loadConfig(overrides: Partial<VotesConfig> = {}): VotesConfig {
@@ -75,6 +81,14 @@ export function loadConfig(overrides: Partial<VotesConfig> = {}): VotesConfig {
     slugsUrl: process.env.SLUGS_URL,
     slugRefreshMs: numberEnv('SLUG_REFRESH_MS', 10 * 60_000),
     logLevel: process.env.LOG_LEVEL ?? 'info',
+    // Same file-then-URL shape as the slug registry: on the web host the promoted manifest is
+    // already on local disk, so prefer it and keep the fetch as the fallback for any other box.
+    submissionsManifestFile: process.env.SUBMISSIONS_MANIFEST_FILE
+      ? resolve(serviceRoot, process.env.SUBMISSIONS_MANIFEST_FILE)
+      : resolve(serviceRoot, '../../dist/api/v1/templates.json'),
+    submissionsManifestUrl: process.env.SUBMISSIONS_MANIFEST_URL ?? 'https://grokbot.dev/api/v1/templates.json',
+    submissionsManifestTtlMs: numberEnv('SUBMISSIONS_MANIFEST_TTL_MS', 5 * 60_000),
+    shareLinkTimeoutMs: numberEnv('SHARE_LINK_TIMEOUT_MS', 2500),
   };
   return { ...cfg, ...overrides };
 }

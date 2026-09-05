@@ -38,4 +38,8 @@ export const defaultLimits = {
   identityIp: { max: 3, windowMs: 24 * 60 * 60_000 },
   voteIp: { max: 60, windowMs: 60 * 60_000 },
   voteIdentity: { max: 30, windowMs: 24 * 60 * 60_000 },
+  // Submitting a bot is a once-in-a-while act, not an interaction: five an hour is generous for
+  // a person with a handful of bots to share and useless to anything trying to flood the queue.
+  // nginx's `limit_req` zone is the first, cheaper copy of this same limit (infra snippet).
+  submissionIp: { max: 5, windowMs: 60 * 60_000 },
 };

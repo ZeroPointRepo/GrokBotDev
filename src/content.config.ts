@@ -503,18 +503,28 @@ function primaryTagIsTagged(
   }
 }
 
-// A PUBLISHED template must name the post it was shared in. `proposed` / `demo` / `deprecated`
-// are exempt, exactly like verified_at — nothing publishes without a traceable sharer (§10.1).
-function templateSourceWhenLive(
-  data: { status: string; source?: unknown },
+/**
+ * A LIVE template must give the reader somewhere to go: the install link, the post it was
+ * announced in, or both.
+ *
+ * This replaces `templateSourceWhenLive` (deleted 2026-09-05 — see the note on `source` below).
+ * Making `source` optional was the right call for bots submitted at /submit/, which arrive as an
+ * install link and nothing else; making BOTH optional would have been an accident. A live entry
+ * with neither is a detail page whose only outbound link is the sharer's profile, which is not
+ * an entry in a directory of installable bots — it is a stub.
+ *
+ * The twin of this rule lives in scripts/validate.mjs (TPL-6).
+ */
+function templateReachableWhenLive(
+  data: { status: string; source?: unknown; share_url?: unknown },
   ctx: z.RefinementCtx
 ) {
-  if ((data.status === 'live' || data.status === 'needs-update') && !data.source) {
+  if ((data.status === 'live' || data.status === 'needs-update') && !data.source && !data.share_url) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ['source'],
+      path: ['share_url'],
       message:
-        'a live template must carry `source` — the X post it was shared in. Nothing publishes without a traceable sharer (§10.1)',
+        'a live template needs `share_url`, `source`, or both — the install link or the post it was shared in. `source` alone is fine (harvested bots), `share_url` alone is fine (submitted bots), neither is a stub (§10.1)',
     });
   }
 }
@@ -529,7 +539,32 @@ const templates = defineCollection({
       tagline, // 10–90, the skim-list one-liner
       description: z.string().min(80).max(320), // detail lead + meta-description base
       sharer, // REQUIRED
-      source: templateSource.optional(), // required when live — see templateSourceWhenLive
+      /**
+       * The X post this bot was announced in. OPTIONAL IN EVERY STATUS, including `live`.
+       *
+       * RELAXED 2026-09-05, when /submit/ opened. It used to be required on a live template
+       * (`templateSourceWhenLive`, now deleted), because every template arrived through the
+       * harvest — which finds bots BY finding the post that shared them, so a live entry with
+       * no post could only mean a missing field.
+       *
+       * A bot submitted at /submit/ may never have been posted about at all: somebody built it,
+       * has the install link, and sends us that. Requiring `source` there forces a reviewer to
+       * either reject a good bot or invent a post URL, and inventing provenance is the exact
+       * failure §10.1 exists to prevent.
+       *
+       * §10.1 ("nothing publishes without a traceable sharer") IS UNCHANGED, because it was
+       * never `source` that carried it: `sharer` above is REQUIRED in every status, and that is
+       * the traceable human. What `source` adds is the post EMBED — and every consumer already
+       * treats it as absent-able: `marketplace/[slug].astro` guards on `d.source &&` /
+       * `d.source?.url`, `lib/templates.ts` `sourceApi()` returns null and the feed falls back
+       * to `d.sharer.url`, `lib/feed.ts` reads it only for use-cases, and build-og never touches
+       * it. For a submitted bot the provenance is its submissions row: the share link was
+       * fetched and answered 200 before the row existed, and a reviewer approved it by hand
+       * (services/votes-api — migrations/003_submissions.sql, bin/review-submissions.ts).
+       *
+       * The twin of this rule lives in scripts/validate.mjs (TPL-6). Both were relaxed together.
+       */
+      source: templateSource.optional(),
       // OPTIONAL even when live (operator): a template may list with its source only. When it
       // is absent NO install button renders — "View details" is always the working primary,
       // so a missing link can never become a dead control.
@@ -560,7 +595,7 @@ const templates = defineCollection({
     .superRefine(datesSane)
     .superRefine(verifiedWhenLive)
     .superRefine(primaryTagIsTagged)
-    .superRefine(templateSourceWhenLive),
+    .superRefine(templateReachableWhenLive),
 });
 
 export const collections = {

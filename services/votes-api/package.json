@@ -16,7 +16,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "recount": "tsx bin/recount.ts",
     "review-flags": "tsx bin/review-flags.ts",
-    "digest": "tsx bin/digest.ts"
+    "digest": "tsx bin/digest.ts",
+    "review-submissions": "tsx bin/review-submissions.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.18.2",

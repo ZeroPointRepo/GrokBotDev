@@ -9,10 +9,17 @@ import { clientIp, ip24Hash, ipHash, uaHash } from './security/ip.js';
 import { makeVoterCookie, verifyVoterCookie } from './security/cookies.js';
 import { decideWeight } from './weighting.js';
 import { createLogger, type Logger } from './logger.js';
-import { jsonError, requestTimeout } from './http.js';
+import { createRequestTimeout, jsonError } from './http.js';
 import { defaultLimits, MemoryRateLimiter } from './rate/limiter.js';
 import type { SlugRegistry } from './slug/registry.js';
 import type { TurnstileVerifier } from './turnstile.js';
+import type { LiveTemplateManifest } from './submissions/live-manifest.js';
+import type { ShareLinkVerifier } from './submissions/share-link.js';
+import {
+  MIN_TIME_ON_FORM_MS,
+  normaliseSubmission,
+  submissionBodySchema,
+} from './submissions/schema.js';
 
 const identityBodySchema = z.object({ turnstileToken: z.string().min(1).max(2048) }).strict();
 const voteBodySchema = z
@@ -22,6 +29,9 @@ const voteBodySchema = z
   })
   .strict();
 const slugParamSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,95}$/);
+
+/** Declared once: the middleware stack, the rate limiter and the route all have to agree. */
+const SUBMISSIONS_PATH = '/api/v1/submissions';
 
 type Variables = {
   requestId: string;
@@ -45,6 +55,10 @@ export interface CreateAppDeps {
   logger?: Logger;
   limiter?: MemoryRateLimiter;
   limits?: Partial<Limits>;
+  /** Fetches an x.ai share page and reads the bot's name/author out of `og:title`. */
+  shareLinkVerifier?: ShareLinkVerifier;
+  /** Already-published bots, so a submission cannot re-file something that is live. */
+  liveManifest?: LiveTemplateManifest;
 }
 
 function mergeLimits(overrides: Partial<Limits> | undefined): Limits {
@@ -52,6 +66,7 @@ function mergeLimits(overrides: Partial<Limits> | undefined): Limits {
     identityIp: overrides?.identityIp ?? defaultLimits.identityIp,
     voteIp: overrides?.voteIp ?? defaultLimits.voteIp,
     voteIdentity: overrides?.voteIdentity ?? defaultLimits.voteIdentity,
+    submissionIp: overrides?.submissionIp ?? defaultLimits.submissionIp,
   };
 }
 
@@ -138,12 +153,19 @@ export function createApp(deps: CreateAppDeps) {
     }
   });
 
-  app.use('/api/v1/*', requestTimeout);
+  // Submissions get their own budgets on both axes. They make outbound calls the vote path
+  // never makes (Turnstile + the share-page fetch), and they carry a Turnstile token AND up to
+  // 500 characters of optional note, which does not fit the 1KB vote body. Everything else is
+  // unchanged — this is a second, wider lane, not a widening of the existing one.
+  const defaultTimeout = createRequestTimeout(5000);
+  const submissionTimeout = createRequestTimeout(12_000);
+  const defaultBodyLimit = bodyLimit({ maxSize: 1024, onError: (c) => jsonError(c, 413, 'body_too_large') });
+  const submissionBodyLimit = bodyLimit({ maxSize: 8192, onError: (c) => jsonError(c, 413, 'body_too_large') });
+  const isSubmissionPost = (c: Context) =>
+    c.req.method === 'POST' && new URL(c.req.url).pathname === SUBMISSIONS_PATH;
 
-  app.use('/api/v1/*', bodyLimit({
-    maxSize: 1024,
-    onError: (c) => jsonError(c, 413, 'body_too_large'),
-  }));
+  app.use('/api/v1/*', (c, next) => (isSubmissionPost(c) ? submissionTimeout(c, next) : defaultTimeout(c, next)));
+  app.use('/api/v1/*', (c, next) => (isSubmissionPost(c) ? submissionBodyLimit(c, next) : defaultBodyLimit(c, next)));
 
   // rateLimit layer (route-aware; identity-specific vote limit runs after cookie verification).
   app.use('/api/v1/*', async (c, next) => {
@@ -169,6 +191,17 @@ export function createApp(deps: CreateAppDeps) {
       if (!result.allowed) {
         c.header('Retry-After', String(result.retryAfterSeconds));
         return jsonError(c, 429, 'rate_limited');
+      }
+    }
+    if (c.req.method === 'POST' && path === SUBMISSIONS_PATH) {
+      const result = limiter.check(
+        `submissions:ip:${ipH.toString('hex')}`,
+        limits.submissionIp.max,
+        limits.submissionIp.windowMs
+      );
+      if (!result.allowed) {
+        c.header('Retry-After', String(result.retryAfterSeconds));
+        return jsonError(c, 429, 'rate_limited', { retry_after_seconds: result.retryAfterSeconds });
       }
     }
     await next();
@@ -358,6 +391,128 @@ export function createApp(deps: CreateAppDeps) {
     `;
     cacheHeaders(c, 'private, no-store');
     return c.json({ slugs: rows.map((row) => row.slug) });
+  });
+
+
+  /**
+   * POST /api/v1/submissions — the public "submit your bot" form.
+   *
+   * NO ACCOUNTS. The only thing a submitter has to give us is the share link; everything else is
+   * attribution they may keep to themselves. What replaces a login is a stack of cheap checks
+   * that a person passes without noticing and a script does not, in ascending order of cost:
+   *
+   *   1. shape          — strict field allowlist, length caps, exact share-link grammar
+   *   2. honeypot       — `website` is invisible to a human, so any value is a bot
+   *   3. time-on-form   — a sub-2s submit never rendered the page
+   *   4. rate limit     — per-IP, above; nginx `limit_req` is the same limit one layer out
+   *   5. Turnstile      — the same verifier POST /api/v1/identity uses (there is no shared
+   *                       middleware to add this to: v1 gates Turnstile inline, per route)
+   *   6. dedupe         — already pending here, or already live on the site
+   *   7. link fetch     — the share page must answer 200, and it tells us the bot's real name
+   *
+   * And then: nothing publishes. The row lands `pending` and only bin/review-submissions.ts
+   * moves it. Steps 1-3 are free, so the enormous, dumb share of junk costs us no outbound call
+   * at all; the two calls we do make (5 and 7) only happen for a well-formed, patient submitter.
+   */
+  app.post(SUBMISSIONS_PATH, async (c) => {
+    const raw = await jsonBody(c);
+    const parsed = submissionBodySchema.safeParse(raw);
+    if (!parsed.success) {
+      const badLink = parsed.error.issues.some((issue) => issue.path[0] === 'share_url');
+      return badLink
+        ? jsonError(c, 400, 'invalid_link', { detail: 'shape' })
+        : jsonError(c, 400, 'bad_request');
+    }
+    const body = parsed.data;
+
+    // Honeypot and time-on-form. Both answer `bad_request` rather than naming the check: a bot
+    // author reading our error strings should not be handed the fix.
+    if (body.website) return jsonError(c, 400, 'bad_request');
+    if (body.elapsed_ms !== undefined && body.elapsed_ms < MIN_TIME_ON_FORM_MS) {
+      return jsonError(c, 400, 'bad_request');
+    }
+
+    const normalised = normaliseSubmission(body);
+    if (!normalised.ok) return jsonError(c, 400, 'bad_field', { field: normalised.field });
+    const submission = normalised.value;
+
+    const turnstile = await deps.turnstileVerifier(body.turnstileToken, c.get('clientIp'));
+    if (!turnstile.success) return jsonError(c, 403, 'turnstile_failed');
+
+    // Cheapest dedupe first: our own queue. UNIQUE on share_url backs this up, so a race
+    // between two identical submissions still ends as one row (see the insert below).
+    const [existing] = await deps.db<{ status: string }[]>`
+      select status from submissions where share_url = ${submission.shareUrl}
+    `;
+    if (existing) {
+      return jsonError(c, 409, 'duplicate', {
+        already: existing.status === 'published' ? 'live' : 'pending',
+      });
+    }
+
+    const live = (await deps.liveManifest?.lookup(submission.shareUrl)) ?? null;
+    if (live) {
+      return jsonError(c, 409, 'duplicate', {
+        already: 'live',
+        live_url: live.url,
+        bot_name: live.name,
+      });
+    }
+
+    // The verification step, and the best spam filter we have: a link nobody can install is not
+    // a submission. A real one hands back the bot's own name and author from `og:title`.
+    const verifier = deps.shareLinkVerifier;
+    let botName: string | null = null;
+    let botAuthor: string | null = null;
+    if (verifier) {
+      const check = await verifier(submission.shareUrl);
+      if (!check.ok) {
+        return jsonError(c, 400, 'invalid_link', {
+          detail: check.reason === 'unreachable' ? 'unreachable' : `http_${check.status ?? 'error'}`,
+        });
+      }
+      botName = check.botName;
+      botAuthor = check.botAuthor;
+    }
+
+    const id = uuidv7();
+    const userAgent = (c.req.header('user-agent') ?? '').slice(0, 300) || null;
+    try {
+      await deps.db`
+        insert into submissions (
+          id, share_url, bot_name, bot_author,
+          submitter_x_handle, submitter_website, submitter_note, source_post_url,
+          ip_hash, user_agent
+        ) values (
+          ${id}, ${submission.shareUrl}, ${botName}, ${botAuthor},
+          ${submission.submitterXHandle}, ${submission.submitterWebsite},
+          ${submission.submitterNote}, ${submission.sourcePostUrl},
+          ${c.get('ipHash')}, ${userAgent}
+        )
+      `;
+    } catch (error) {
+      // 23505 = unique_violation: two submitters raced on the same link. Same answer as above.
+      if ((error as { code?: string }).code === '23505') {
+        return jsonError(c, 409, 'duplicate', { already: 'pending' });
+      }
+      throw error;
+    }
+
+    logger.info('submission_accepted', {
+      request_id: c.get('requestId'),
+      share_url: submission.shareUrl,
+      bot_name: botName,
+      credited: Boolean(submission.submitterXHandle),
+    });
+
+    return c.json({
+      ok: true,
+      status: 'accepted',
+      share_url: submission.shareUrl,
+      bot_name: botName,
+      bot_author: botAuthor,
+      credit_handle: submission.submitterXHandle,
+    });
   });
 
   app.notFound((c) => jsonError(c, 404, 'not_found'));

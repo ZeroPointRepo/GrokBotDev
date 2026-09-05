@@ -51,7 +51,8 @@ Points `current` at the previous release.
 
 ## Dynamic port map
 - `127.0.0.1:4390` = existing `grokbot-services` waitlist/MCP service (`/api/waitlist`, `/mcp`, `/healthz`).
-- `127.0.0.1:4391` = P1 `grokbot-votes-api` service (`/api/v1/*` votes endpoints).
+- `127.0.0.1:4391` = `grokbot-votes-api` service — `/api/v1/*` votes endpoints **and**
+  `POST /api/v1/submissions` (the public /submit/ bot form).
 
 
 ## Upvotes P1 rollout / production notes
@@ -121,3 +122,85 @@ curl -s 'https://grokbot.dev/api/v1/votes/counts?slugs=<a-template-slug>' | jq
 `SLUGS_FILE` when that yields nothing. Any dev votes-api must therefore set **both**
 `USE_CASE_CONTENT_DIR=/nonexistent-force-fallback` **and** `SLUGS_FILE`, or it will silently know
 use-case slugs only no matter what the manifest says.
+
+---
+
+## Public bot submissions (`/submit/`) — shipped 2026-09-05
+
+The /submit/ page leads with a form whose only required field is the bot's `https://x.ai/bot/…`
+share link. It is the **same service, same database, same nginx vhost** as upvotes — no new
+process, no new port, no accounts.
+
+### What was added
+
+| piece | where |
+|---|---|
+| table `submissions` | `services/votes-api/migrations/003_submissions.sql` (table + indexes + grants in one file) |
+| endpoint `POST /api/v1/submissions` | `services/votes-api/src/app.ts` + `src/submissions/{schema,share-link,live-manifest}.ts` |
+| review CLI | `services/votes-api/bin/review-submissions.ts` (`npm run review-submissions`) |
+| form + island | `src/components/SubmitBotForm.astro` + `src/scripts/submit-form.ts` (bundled, zero inline JS) |
+| nginx | `location = /api/v1/submissions` + `limit_req_zone grokbot_submissions` — `infra/nginx-grokbot.dev.votes.snippet.conf` |
+
+`submissions` stores a peppered `ip_hash` (never a raw IP), a truncated user-agent, the link, the
+bot name/author read server-side from the share page's `og:title`, and whatever optional
+attribution the submitter chose to give. `votes_app` has **INSERT + SELECT only** — the service
+literally cannot approve, publish, or delete a submission; only `votes_admin` (the review CLI) can.
+
+### Env (production `secrets/votes-api.env`)
+
+Both lines are OPTIONAL — the defaults work — but the file path is much cheaper than the fetch on
+the web host, because the promoted manifest is already on local disk:
+
+```dotenv
+# Live-bot dedupe. File is tried first, URL is the fallback; if neither answers, the check is
+# skipped (the table's UNIQUE constraint and the reviewer still catch duplicates).
+SUBMISSIONS_MANIFEST_FILE=/opt/projects/user/grokbot/current/api/v1/templates.json
+SUBMISSIONS_MANIFEST_URL=https://grokbot.dev/api/v1/templates.json
+# SUBMISSIONS_MANIFEST_TTL_MS=300000   # default 5 min
+# SHARE_LINK_TIMEOUT_MS=2500           # budget for the server-side share-page fetch
+```
+
+No new secret. Turnstile reuses the existing `TURNSTILE_SECRET_KEY` / `PUBLIC_TURNSTILE_SITEKEY`.
+
+### Deploy order (the API must be reachable BEFORE the form is live)
+
+```bash
+# 1 — nginx (root on crhq-products)
+#     zones file: add   limit_req_zone $binary_remote_addr zone=grokbot_submissions:10m rate=5r/m;
+#     vhost:      add   the `location = /api/v1/submissions` block from the infra snippet
+nginx -t && systemctl reload nginx
+
+# 2 — service
+cd /opt/projects/user/grokbot/votes-api-src && sudo -u agent git fetch origin && sudo -u agent git reset --hard origin/main
+cd services/votes-api && sudo -u agent npm ci && sudo -u agent npm run db:migrate && sudo -u agent npm run build
+sudo -u agent pm2 restart grokbot-votes-api --update-env
+curl -s https://grokbot.dev/api/v1/health
+
+# 3 — site
+bash infra/promote.sh
+```
+
+Migrations are re-runnable: `003_submissions.sql` is `create table if not exists` + idempotent
+grants, exactly like 001/002.
+
+### Reviewing what comes in
+
+```bash
+cd /opt/projects/user/grokbot/votes-api-src/services/votes-api
+sudo -u agent npm run review-submissions -- list
+sudo -u agent npm run review-submissions -- approve --id <uuid> --tags personal,productivity
+sudo -u agent npm run review-submissions -- reject  --id <uuid> --note "why"
+sudo -u agent npm run review-submissions -- published --id <uuid>
+```
+
+`approve` prints a `templates.jsonl` record (and appends it to `$TEMPLATES_JSONL` when set), which
+is the entry point of the existing authoring → `generator.py` → build gate → `promote.sh`
+pipeline. It REFUSES to approve without an X handle to credit — pass `--sharer-handle` when the
+submitter left the field blank. Mark the row `published` once the bot is actually live.
+
+### Schema change that shipped with it
+
+`source` (the announcing X post) is now **optional on a live template** in both
+`src/content.config.ts` and `scripts/validate.mjs` (TPL-6), and `generator.py` emits the `source:`
+block conditionally. A submitted bot may never have been posted about; `sharer` still carries
+§10.1's traceable credit. See the long note on the field in `src/content.config.ts`.

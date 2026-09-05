@@ -12,6 +12,14 @@ Submit page say the same thing.
 
 ## 0. The 60-second version
 
+**Sharing a Grok Bot you built or found? Don't read any further — paste the link.**
+[grokbot.dev/submit](https://grokbot.dev/submit/) asks for one field: the `https://x.ai/bot/…`
+share link. No account, no GitHub, no login. We fetch the link ourselves, read the bot's name off
+its share page, and put it in the review queue. Everything else on that form is optional and is
+only used to credit you. Nothing publishes until a human approves it (§0b).
+
+For a **plugin** or a written-up **use case**, it is still a pull request:
+
 1. Add **one** Markdown file under `content/plugins/`, `content/use-cases/`, or
    `content/collections/`. The **filename is the slug** (kebab-case) and must match the `slug`
    field.
@@ -22,6 +30,30 @@ Submit page say the same thing.
 Fastest path with no local setup: use the "add a file" links on
 [grokbot.dev/submit](https://grokbot.dev/submit/) — they open a new file in the right folder
 straight on GitHub.
+
+---
+
+## 0b. The /submit/ form — what happens to what you send
+
+The form posts to `POST /api/v1/submissions` (the votes-api service, same origin). Before a row
+exists, the server:
+
+1. checks the link is exactly `https://x.ai/bot/<21 url-safe base64 chars>`;
+2. checks a hidden honeypot field is empty and that the form was open for at least 2 seconds;
+3. rate-limits by network (nginx `limit_req` + the service's own per-IP window);
+4. verifies Cloudflare Turnstile;
+5. rejects it as a duplicate if that link is already in the queue or already on the site;
+6. **fetches the share link** — it must answer `200`, and its `og:title` is where `name` and the
+   bot's author come from. A dead or invented link never gets past this.
+
+What is stored: the link, the bot name/author we read off it, whatever optional attribution you
+chose to give, a **one-way peppered hash** of your network address (never the address itself),
+and a truncated user-agent. No email, no account, no cookie.
+
+**Nothing on that form publishes anything.** The row lands `pending`. A maintainer reviews it
+with `npm run review-submissions -- list` and approving it emits a normal record into the same
+authoring → generator → build-gate → promote pipeline every other Shareable Bot goes through.
+Details in `services/votes-api/RUNBOOK.md`.
 
 ---
 
@@ -204,7 +236,7 @@ they publish; if a link still has them, report it rather than index it.
 | `tagline` | 10–90 chars. The one line that appears in the list. |
 | `description` | 80–320 chars. Base it on the share page's `og:description` (the bot's own instruction summary), not on marketing copy. |
 | `sharer` | `handle` (no leading `@`), optional `name`, `url`, `platform`. REQUIRED — the credit is the point. |
-| `source` | The X post it was shared in: `url`, `excerpt` (20–280 chars, a partial quote — never the whole post), optional `posted_at`. Required once it goes live. |
+| `source` | Optional. The X post it was shared in: `url`, `excerpt` (20–280 chars, a partial quote — never the whole post), optional `posted_at`. **No longer required when live** (relaxed 2026-09-05): a bot sent through /submit/ may never have been posted about, and `sharer` is what carries the credit. Include it whenever there IS a post — it renders the embed. |
 | `share_url` | Optional. The "Add to Grok Bot" link, always `https://x.ai/bot/<id>` with a 21-character id. Leave it out if there is not one yet; the page just links the post instead. |
 | `tags` | 1–8 slugs from `src/data/template-tags.json`, faceted: audience / value / domain / structure. Use more than one facet. |
 | `primary_category` | One of your own `tags`. It leads the row and titles the social card. |
