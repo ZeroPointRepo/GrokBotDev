@@ -163,6 +163,8 @@ There is deliberately **no public endpoint that lists submissions**.
 
 ### Reviewing
 
+Local checkout (a `.env` is present, so dotenv finds the credentials):
+
 ```bash
 npm run review-submissions -- list                      # pending queue, oldest first
 npm run review-submissions -- list --status all
@@ -171,6 +173,20 @@ npm run review-submissions -- approve  --id <uuid> --tags personal,productivity 
 npm run review-submissions -- reject   --id <uuid> --note "why"
 npm run review-submissions -- published --id <uuid>
 ```
+
+**Production has no `.env`** — pm2 starts the service with
+`--env-file=/opt/projects/user/grokbot/secrets/votes-api.env`, so `npm run review-submissions`
+there dies with `password authentication failed for user "votes_admin"`. Run the compiled CLI and
+give node the same env file:
+
+```bash
+cd /opt/projects/user/grokbot/votes-api-src/services/votes-api
+sudo -u agent node --env-file=/opt/projects/user/grokbot/secrets/votes-api.env \
+  dist/bin/review-submissions.js list
+```
+
+`dist/bin/review-submissions.js` comes out of the service's own `npm run build`, so it can never
+drift from the deployed code. Every subcommand and flag above is identical.
 
 `approve` validates the tags against `src/data/template-tags.json`, records the decision in
 `audit_log`, and prints a ready-to-use `templates.jsonl` record — the entry point of the existing

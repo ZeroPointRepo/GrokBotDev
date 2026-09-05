@@ -26,19 +26,37 @@ async function ensureRoles(sql: ReturnType<typeof postgres>, appPassword: string
   `);
 }
 
+/**
+ * Session advisory lock held for the whole run, so two migrators can never overlap.
+ *
+ * Migrating is not just `create table if not exists`: `ensureRoles` runs ALTER ROLE and every
+ * file re-applies its GRANTs. Those write catalog tuples (`pg_authid`, `pg_class`) that Postgres
+ * will NOT serialise for us — a second migrator arriving mid-run dies with
+ * `tuple concurrently updated`. That is exactly what vitest does when two integration suites
+ * migrate the same database in parallel, and it is what a deploy does if a restart races the
+ * `db:migrate` step. Arbitrary but stable key; `max: 1` guarantees the lock and the work share
+ * one session.
+ */
+const MIGRATION_LOCK_KEY = 4391_0003;
+
 export async function migrate() {
   const cfg = loadConfig();
   const sql = postgres(cfg.migrateDatabaseUrl, { max: 1, idle_timeout: 5, connect_timeout: 5, onnotice: () => {} });
   try {
-    await ensureRoles(sql, cfg.appRolePassword, cfg.adminRolePassword);
-    const migrationsDir = join(new URL('.', import.meta.url).pathname, '../../migrations');
-    const files = (await readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();
-    for (const file of files) {
-      const text = await readFile(join(migrationsDir, file), 'utf8');
-      await sql.begin(async (tx) => {
-        await tx.unsafe(text);
-      });
-      console.log(JSON.stringify({ at: new Date().toISOString(), level: 'info', message: 'migration_applied', file }));
+    await sql`select pg_advisory_lock(${MIGRATION_LOCK_KEY})`;
+    try {
+      await ensureRoles(sql, cfg.appRolePassword, cfg.adminRolePassword);
+      const migrationsDir = join(new URL('.', import.meta.url).pathname, '../../migrations');
+      const files = (await readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();
+      for (const file of files) {
+        const text = await readFile(join(migrationsDir, file), 'utf8');
+        await sql.begin(async (tx) => {
+          await tx.unsafe(text);
+        });
+        console.log(JSON.stringify({ at: new Date().toISOString(), level: 'info', message: 'migration_applied', file }));
+      }
+    } finally {
+      await sql`select pg_advisory_unlock(${MIGRATION_LOCK_KEY})`;
     }
   } finally {
     await sql.end({ timeout: 5 });

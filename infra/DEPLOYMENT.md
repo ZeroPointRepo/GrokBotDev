@@ -185,13 +185,26 @@ grants, exactly like 001/002.
 
 ### Reviewing what comes in
 
+The production checkout has **no `.env`** — the service is started by pm2 with
+`--env-file=/opt/projects/user/grokbot/secrets/votes-api.env`, and `npm run review-submissions`
+(which loads `./.env` via dotenv) therefore fails with `password authentication failed for user
+"votes_admin"`. On production run the **compiled** CLI and hand node the same env file pm2 uses:
+
 ```bash
 cd /opt/projects/user/grokbot/votes-api-src/services/votes-api
-sudo -u agent npm run review-submissions -- list
-sudo -u agent npm run review-submissions -- approve --id <uuid> --tags personal,productivity
-sudo -u agent npm run review-submissions -- reject  --id <uuid> --note "why"
-sudo -u agent npm run review-submissions -- published --id <uuid>
+R="sudo -u agent node --env-file=/opt/projects/user/grokbot/secrets/votes-api.env dist/bin/review-submissions.js"
+
+$R list                                                        # pending queue, oldest first
+$R list --status all
+$R show      --id <uuid>
+$R approve   --id <uuid> --tags personal,productivity [--sharer-handle h] [--note "why"]
+$R reject    --id <uuid> --note "why"
+$R published --id <uuid>
 ```
+
+`dist/bin/review-submissions.js` is produced by the same `npm run build` step as the service, so
+it is always in step with the deployed code. `npm run review-submissions -- …` is the equivalent
+for a **local** checkout, where `.env` exists.
 
 `approve` prints a `templates.jsonl` record (and appends it to `$TEMPLATES_JSONL` when set), which
 is the entry point of the existing authoring → `generator.py` → build gate → `promote.sh`
@@ -201,6 +214,16 @@ submitter left the field blank. Mark the row `published` once the bot is actuall
 ### Schema change that shipped with it
 
 `source` (the announcing X post) is now **optional on a live template** in both
-`src/content.config.ts` and `scripts/validate.mjs` (TPL-6), and `generator.py` emits the `source:`
-block conditionally. A submitted bot may never have been posted about; `sharer` still carries
-§10.1's traceable credit. See the long note on the field in `src/content.config.ts`.
+`src/content.config.ts` and `scripts/validate.mjs` (TPL-6) — relaxed together, and backstopped by
+a floor that did not exist before: a live template must carry `share_url`, `source`, or both.
+A submitted bot may never have been posted about; `sharer` still carries §10.1's traceable credit.
+See the long note on the field in `src/content.config.ts`.
+
+**Open item for whoever owns `generator.py`.** That script is not in this repository and is not on
+the build host, so it could not be changed here: it still writes the `source:` block
+unconditionally, i.e. `url: <source_tweet_url>`, and `review-submissions approve` emits
+`source_tweet_url: null` for a bot that was never posted about. The one-line change is to emit the
+`source:` block only when `source_tweet_url` is truthy. **This fails safe until then** — the
+generated front matter would carry `source.url: null`, which `templateSource` (`url` must match
+`X_STATUS_RE`, `excerpt` 20-280 chars) rejects, so the build gate stops it loudly rather than
+publishing a broken entry. The first sourceless approval will hit this.
