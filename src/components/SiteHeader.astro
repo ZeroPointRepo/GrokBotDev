@@ -540,6 +540,21 @@ const utility = [
       padding-inline: 0.5rem;
     }
   }
+  /* ---------- sub-360 phones (320, 344 …) ----------
+     Below 360 the content box falls under the 328px floor measured above and `menu` wraps to
+     a second row again. Every control is already at its documented floor — the gutters are at
+     8px, and both chrome controls keep their 36px block size for SC 2.5.8 — so the only
+     element left that can give back real width is the WORDMARK, and it is worth ~68px.
+     The 30px mark stays (the operator's "much larger in the header" was always about the
+     mark), and the link keeps `aria-label="grokbot.dev home"`, so the home affordance and its
+     accessible name both survive the word being hidden. `display: none` and not a font step:
+     at 320px a smaller word still would not fit, and half-measures here cost another QA round.
+     360-389px is deliberately untouched — it MEASURES as fitting, so it keeps its wordmark. */
+  @media (max-width: 359px) {
+    .brand-word {
+      display: none;
+    }
+  }
 
   /* ---------- drawer (F1, polished at F7) ---------- */
   .navDrawer {
