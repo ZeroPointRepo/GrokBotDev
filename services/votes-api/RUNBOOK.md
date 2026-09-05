@@ -30,12 +30,26 @@ docker stop grokbot-votes-pg
 - App role: `votes_app` (no `UPDATE`/`DELETE` on `vote_events`; **INSERT + SELECT only** on `submissions`)
 - Admin role: `votes_admin` (CLI maintenance — the only role that can move a submission's `status`)
 
-Apply migrations:
+Apply migrations (local checkout — `npm run db:migrate` runs the TypeScript with tsx and reads
+`./.env`):
 
 ```bash
 cd /opt/projects/grokbotdev-upvotes/services/votes-api
 npm run db:migrate
 ```
+
+On **production** there is no `.env`, so build first and run the compiled migrator with the env
+file pm2 uses:
+
+```bash
+cd /opt/projects/user/grokbot/votes-api-src/services/votes-api
+sudo -u agent npm run build
+sudo -u agent node --env-file=/opt/projects/user/grokbot/secrets/votes-api.env dist/src/db/migrate.js
+```
+
+Migrating is idempotent and safe to re-run: every file is `create … if not exists` plus grants,
+and the whole run holds a session advisory lock, so a migrate that overlaps another migrate (or a
+restart) waits instead of failing on a concurrently-updated catalog tuple.
 
 ## Production slug registry
 

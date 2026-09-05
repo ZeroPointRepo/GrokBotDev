@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import postgres from 'postgres';
-import { loadConfig } from '../config.js';
+import { SERVICE_ROOT, loadConfig } from '../config.js';
 
 function literal(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
@@ -46,7 +46,7 @@ export async function migrate() {
     await sql`select pg_advisory_lock(${MIGRATION_LOCK_KEY})`;
     try {
       await ensureRoles(sql, cfg.appRolePassword, cfg.adminRolePassword);
-      const migrationsDir = join(new URL('.', import.meta.url).pathname, '../../migrations');
+      const migrationsDir = join(SERVICE_ROOT, 'migrations');
       const files = (await readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();
       for (const file of files) {
         const text = await readFile(join(migrationsDir, file), 'utf8');

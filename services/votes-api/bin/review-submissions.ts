@@ -22,7 +22,7 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loadConfig } from '../src/config.js';
+import { SERVICE_ROOT, loadConfig } from '../src/config.js';
 import { connect } from '../src/db/client.js';
 import { normaliseHandle } from '../src/submissions/schema.js';
 
@@ -40,7 +40,7 @@ const command = (args[0] ?? 'list').replace(/^--/, '');
 const cfg = loadConfig();
 const db = connect(cfg.adminDatabaseUrl, 1);
 
-const REPO_ROOT = resolve(new URL('.', import.meta.url).pathname, '../../..');
+const REPO_ROOT = resolve(SERVICE_ROOT, '../..');
 const TAGS_FILE = resolve(REPO_ROOT, 'src/data/template-tags.json');
 
 interface SubmissionRow {

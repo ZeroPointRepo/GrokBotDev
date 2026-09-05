@@ -69,7 +69,7 @@ The upvotes stack adds a same-origin votes API and keeps the static build invari
    SLUGS_FILE=/opt/projects/user/grokbot/current/api-meta/use-case-slugs.json
    ```
    Production must use the deployed `current/api-meta/use-case-slugs.json` manifest as the permanent slug source. The `current` symlink is atomically updated on every promote and the API re-reads the manifest on the default `SLUG_REFRESH_MS` cadence (10 minutes), so newly published use cases become voteable without redeploying the service checkout.
-4. Install and migrate on the production checkout: `cd services/votes-api && npm ci && npm run db:migrate && npm run build`.
+4. Install and migrate on the production checkout: `cd services/votes-api && npm ci && npm run build`, then `node --env-file=<prod env file> dist/src/db/migrate.js`. Build first, and use the compiled migrator: the npm scripts run tsx, which loads `./.env`, and the production checkout deliberately has none (pm2 passes `--env-file`).
 5. Start `pm2` app `grokbot-votes-api` bound to `127.0.0.1:4391` with the external production env file.
 6. Apply the nginx changes from `infra/nginx-grokbot.dev.votes.snippet.conf` (http-level `limit_req_zone` once, then server-level exact `/api/v1/identity`, `/api/v1/votes`, `/api/v1/votes/*`, and `/api/v1/health` proxy locations). Keep existing static `.json` handling untouched.
 7. Copy the updated `infra/security-headers.conf` into `/etc/nginx/snippets/grokbot-security-headers.conf`; this consciously adds `https://challenges.cloudflare.com` for Turnstile script/frame/connect. Confirm `nginx -t` before reload.
@@ -170,9 +170,14 @@ No new secret. Turnstile reuses the existing `TURNSTILE_SECRET_KEY` / `PUBLIC_TU
 #     vhost:      add   the `location = /api/v1/submissions` block from the infra snippet
 nginx -t && systemctl reload nginx
 
-# 2 — service
+# 2 — service. NOTE the order: build BEFORE migrate, and migrate with the compiled migrator.
+#     There is no .env in the production checkout — pm2 supplies the environment with
+#     --env-file, and every npm script here (tsx) would look for ./.env and fail on the
+#     database password. So hand node the same file pm2 uses.
+ENV=/opt/projects/user/grokbot/secrets/votes-api.env
 cd /opt/projects/user/grokbot/votes-api-src && sudo -u agent git fetch origin && sudo -u agent git reset --hard origin/main
-cd services/votes-api && sudo -u agent npm ci && sudo -u agent npm run db:migrate && sudo -u agent npm run build
+cd services/votes-api && sudo -u agent npm ci && sudo -u agent npm run build
+sudo -u agent node --env-file=$ENV dist/src/db/migrate.js     # idempotent; safe to re-run
 sudo -u agent pm2 restart grokbot-votes-api --update-env
 curl -s https://grokbot.dev/api/v1/health
 

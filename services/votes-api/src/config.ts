@@ -28,6 +28,18 @@ const moduleDir = dirname(fileURLToPath(import.meta.url));
 const serviceRoot = findServiceRoot(moduleDir);
 dotenv({ path: resolve(serviceRoot, '.env'), quiet: true });
 
+/**
+ * `services/votes-api/`, resolved by walking up to this package's own package.json.
+ *
+ * Anything that reads a file off disk must anchor here rather than count directory levels from
+ * `import.meta.url`, because the level count DIFFERS between running the TypeScript with tsx
+ * (`src/db/migrate.ts`) and running the build output (`dist/src/db/migrate.js`) — one extra
+ * `dist/` segment. Counting levels gives you a tool that works in development and cannot find
+ * its own files in production. `findServiceRoot` walks until it sees `grokbot-votes-api`, so it
+ * is right from both.
+ */
+export const SERVICE_ROOT = serviceRoot;
+
 function required(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
   if (!value) throw new Error(`missing required env ${name}`);
