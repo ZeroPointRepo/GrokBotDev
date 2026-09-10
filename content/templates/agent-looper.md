@@ -3,7 +3,7 @@ type: "template"
 name: "Agent Looper"
 slug: "agent-looper"
 tagline: "Keeps a local coding agent iterating until your acceptance test passes"
-description: "Describe the feature you want and, in plain language, the condition that proves it is finished. The bot then drives a coding tool already installed on your machine, such as Cursor, Cline or OpenCode, through repeated attempts, stopping only once that finish condition is genuinely met."
+description: "Describe the feature you want and, in plain language, the check that proves it is finished. The bot freezes that goal, then drives a coding harness already on your machine — Cursor, Cline, OpenCode, Pi, Codex, DSH, Muse or Claude Code — through repeated attempts, stopping only once the check genuinely passes."
 sharer:
   handle: "dancingteeth"
   url: "https://x.com/dancingteeth"
@@ -19,15 +19,17 @@ includes: ["instructions", "workflow"]
 related_use_cases: []
 featured: false
 added_at: "2026-08-30T01:08:27.000Z"
-updated_at: "2026-08-30T01:08:27.000Z"
-verified_at: "2026-08-30T01:08:27.000Z"
+updated_at: "2026-09-10T00:00:00.000Z"
+verified_at: "2026-09-10T00:00:00.000Z"
 status: "live"
 ---
 
 ## What it does
 
-Describe the feature you want and, in plain language, the condition that proves it is finished. The bot then drives a coding tool already installed on your machine, such as Cursor, Cline or OpenCode, through repeated attempts, stopping only once that finish condition is genuinely met. It runs when you ask it to, rather than on a timer.
+Describe the feature you want and, in plain language, the check that proves it is finished. The bot freezes that goal, then drives a coding harness already installed on your machine — Cursor, Cline, OpenCode, Pi, Codex, DSH, Muse or Claude Code — through repeated attempts, stopping only once the check genuinely passes. It runs when you ask it to, rather than on a timer.
 
 ## Before you install
+
+You need one of those coding harnesses already set up on your machine; the bot drives a tool you have, it does not bring its own. Setup goes through the `agent-loop-prompt` command in the `@dancingteeth/agent-looper` npm package.
 
 Open the share link and read the instructions it carries before you add it. @dancingteeth shared this one publicly, and adding it copies the setup into your own account rather than giving you access to theirs.
