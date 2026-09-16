@@ -1,33 +1,29 @@
 ---
-type: template
-name: ZenSched
-slug: zensched-field-crew-scheduler
-tagline: "Schedule field crews over MCP — GPS check-in and timesheets, no vendor UI."
-description: "Field workforce scheduling for agents. Connects to ZenSched over MCP so an agent can create the vendor account, schedule crews, run geofenced check-in, and pull timesheets without a human clicking the vendor UI."
+type: "template"
+name: "ZenSched"
+slug: "zensched-field-crew-scheduler"
+tagline: "Runs field-crew scheduling over MCP, from shift planning to GPS-verified check-in"
+description: "Aims an agent at the field-operations loop over a remote MCP connection: opening the vendor account, adding locations and shifts, inviting crew to the mobile app, watching geofenced check-ins land, and pulling the resulting timesheets. For operators who would rather run the day in chat than in a vendor dashboard."
 sharer:
-  handle: zensched
-  name: Mike Fullman
-  url: https://x.com/zensched
-  platform: x
-share_url: https://x.ai/bot/LK0rEXJnnD1qpEISXd7Ix
-tags: [business, ops, calendar, back-office, automation]
-primary_category: business
-includes: [instructions, connectors, workflow]
-integrations: []
+  handle: "zensched"
+  url: "https://x.com/zensched"
+  platform: "x"
+share_url: "https://x.ai/bot/LK0rEXJnnD1qpEISXd7Ix"
+tags: ["business", "ops", "calendar", "back-office", "automation"]
+primary_category: "business"
+includes: ["instructions", "workflow"]
+related_use_cases: []
+featured: false
 added_at: "2026-09-15T19:30:00Z"
 updated_at: "2026-09-15T19:30:00Z"
-verified_at: "2026-09-16T00:00:00Z"
-status: live
+verified_at: "2026-09-15T19:30:00Z"
+status: "live"
 ---
 
 ## What it does
 
-This Grok Bot is wired for ZenSched's remote MCP server (`https://mcp.zensched.com/mcp`). It helps an agent operator run a field crew loop: mint or reuse a `zsc_` org key, create locations and shifts, invite workers to the mobile app, watch GPS-verified punches, and export timesheets. It is built for agent-native ops — not a dashboard substitute for a field manager.
-
-## What you get
-
-A packaged bot profile that already knows the ZenSched tool surface, billing gates, and typical scheduling workflow (guide → account → location → worker → shift → reconcile). Install adds the bot's instructions; you still connect the ZenSched MCP server with your Bearer key.
+Aims an agent at the field-operations loop over a remote MCP connection: opening the vendor account, adding locations and shifts, inviting crew to the mobile app, watching geofenced check-ins land, and pulling the resulting timesheets. For operators who would rather run the day in chat than in a vendor dashboard.
 
 ## Before you install
 
-You need a `zsc_` API key (cold-start via `account_create` on the MCP server, or from an existing ZenSched org). Paid meters (worker invite, geocode, GPS verify, processed timesheets) require a funded balance — the bot should ask before spending. Workers always complete check-in in the ZenSched iOS/Android app, not in chat.
+Open the share link and read the instructions it carries before you add it. @zensched shared this one publicly, and adding it copies the setup into your own account rather than giving you access to theirs.
