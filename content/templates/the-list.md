@@ -3,7 +3,7 @@ type: "template"
 name: "The List"
 slug: "the-list"
 tagline: "Three lines in your own chat whenever a new bot lands in the directory"
-description: "The List is the GrokBotGod in-bot newsletter. Install once; get three-line drops in this chat when new bots or directory picks land. No email. No yes/no opt-ins."
+description: "For people browsing Grok Bots: each new GrokBotGod bot arrives in your chat as three lines (name, one job, link). Paste any x.ai/bot link to get the same three lines. Never emails."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"

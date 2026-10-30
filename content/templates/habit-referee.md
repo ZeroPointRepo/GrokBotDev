@@ -3,7 +3,7 @@ type: "template"
 name: "Habit Referee"
 slug: "habit-referee"
 tagline: "Holds you to exactly one small habit, and nothing else"
-description: "You pick a single tiny habit and it checks in with you each day to see whether you kept to it. On the days you follow through it stays out of the way and simply keeps the running streak. On the days you slip it says one short thing about it, and then it lets the subject drop rather than piling on."
+description: "For building one habit, like \"run 20 minutes\": pick a check-in time and it asks \"Did you do it?\" daily. Yes grows your streak, Skip holds it, No gets one nag. Never tracks a second habit."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"
