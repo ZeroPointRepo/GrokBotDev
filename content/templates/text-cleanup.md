@@ -3,7 +3,7 @@ type: "template"
 name: "Text-cleanup"
 slug: "text-cleanup"
 tagline: "Cleans up writing you already have into one send-ready version"
-description: "Hand it a rough paragraph \u2014 a reply typed too fast, notes pasted out of a document, wording that came through a translator badly \u2014 and a single edited version comes back. It works on text that already exists instead of inventing new copy, so what returns is still yours, only clearer."
+description: "For email, Slack or posts: paste messy notes or an AI draft, get one clean version in your saved tone and length, ready to send. Say \"shorter\" to redo it. Never adds new facts."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"

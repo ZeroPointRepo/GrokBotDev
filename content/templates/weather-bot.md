@@ -3,7 +3,7 @@ type: "template"
 name: "Weather Bot"
 slug: "weather-bot"
 tagline: "Two lines of weather a day, and a nudge only when it matters"
-description: "Weather stripped to what you would actually check. Tell it where you are once and it keeps the answer, then gives current conditions, the day's high and low, and rain chances in a couple of lines. Real weather earns one extra sentence; otherwise it stays quiet. No tips, no emoji, nothing past 48 hours unless you ask."
+description: "For anyone who wants weather without the app: give your city once, get a 2-line forecast (now, high/low, rain chance). Alerts only for severe weather, a ~15°F/8°C swing or travel trouble. Never adds chatter."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"

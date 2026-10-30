@@ -3,7 +3,7 @@ type: "template"
 name: "Resume Optimizer: Tailor Resume to Job"
 slug: "resume-optimizer-tailor-resume-to-job"
 tagline: "Tailors your resume to one job post, keyword-aware, and lists what is missing."
-description: "Paste in a resume and the listing you are targeting, and get the resume reworked for that specific role, with the phrasing applicant-tracking systems look for. It also flags the gaps between what the posting asks for and what your resume actually shows, and it will not invent experience or numbers to fill them."
+description: "For job seekers: paste your resume and one job post, get it reworded in that post's words plus a list of gaps to answer, as text, Word or PDF. Never adds jobs, skills, dates or numbers."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"

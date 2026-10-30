@@ -3,7 +3,7 @@ type: "template"
 name: "Grok Bot Polish"
 slug: "grok-bot-polish"
 tagline: "Rewrites bot and app listings into search-friendly wording, from what you paste in"
-description: "Paste in a bot card, store listing or product page and it comes back tightened for search: a clearer name, an opening line phrased the way real searchers phrase their questions, and a description that says less and lands harder. It changes only the text you hand it and publishes nothing itself."
+description: "For bot and app makers: paste your listing's name, one-liner and description, get one rewrite whose first line uses search words. Say \"fit 160 chars\" to trim it. Never invents features."
 sharer:
   handle: "GrokBotGod"
   url: "https://x.com/GrokBotGod"
