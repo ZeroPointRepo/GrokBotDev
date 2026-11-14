@@ -2,7 +2,7 @@
 type: plugin
 name: "DC Hub"
 slug: dc-hub
-tagline: "Orchestration layer for data center and energy intelligence. Start with execute_plan."
+tagline: "Orchestration layer for data center and energy intelligence: start with execute_plan for electricity prices and power grid questions."
 category: data
 subcategory: enrichment
 install_steps:
