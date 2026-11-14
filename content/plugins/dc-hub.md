@@ -2,11 +2,11 @@
 type: plugin
 name: "DC Hub"
 slug: dc-hub
-tagline: "Live data center, power, grid and fiber data for site selection, with citations."
+tagline: "Orchestration layer for data center and energy intelligence: start with execute_plan for electricity prices and power grid questions."
 category: data
 subcategory: enrichment
 install_steps:
-  - "Add the hosted MCP server https://dchub.cloud/mcp to your Grok Bot as a connector. The free tier needs no key and no account."
+  - "Add the hosted MCP server https://dchub.cloud/mcp to your Grok Bot as a connector. DCHUB_API_KEY is optional."
   - "Paste the prompt below so DC Hub becomes the bot's standing source for data-center, power and grid questions."
   - "Ask a first question, such as which US markets have the most grid power available for a 100 MW data center, and check the answer carries an as-of time and a citation."
 prompt: "You have the DC Hub MCP server connected at https://dchub.cloud/mcp. First read DC Hub's developer docs at https://dchub.cloud/developers and the server's own tool list, so you know which tools exist. Use DC Hub whenever I ask about data-center site selection, grid power availability, interconnection queues, electricity prices, fiber, or data-center markets: rank or compare markets, check a site, or pull live grid and queue data. Its Data Center Power Index (DCPI) is a daily score of where data centers can get grid power, across 300+ markets. Rules: only call tools and fields DC Hub actually documents and never invent one; quote numbers exactly as returned with their as-of time and cite them as DC Hub (dchub.cloud); if a tool says an answer needs a key or a paid plan, tell me and stop rather than guessing; ask before any call that saves, alerts, emails or spends anything. Confirm the connection with one small market lookup before we start."
@@ -18,7 +18,7 @@ author:
   handle: "dchubcloud"
   url: "https://x.com/dchubcloud"
   platform: x
-pricing_note: "Free tier with no key; paid plans for full reports and higher limits."
+pricing_note: "DCHUB_API_KEY is optional."
 setup_minutes: 5
 added_at: "2026-10-19T20:40:00Z"
 updated_at: "2026-10-19T20:40:00Z"
